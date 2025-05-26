@@ -5,7 +5,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
 
 public class Main {
     public static void main(String[] args) {
@@ -65,6 +64,7 @@ public class Main {
                 .flatMap(customer -> customer.getOrders().stream())
                 .filter(order -> order.getProducts().stream()
                         .anyMatch(product -> product.getCategory().equals("Children's products")))
+                .distinct()
                 .toList();
         System.out.println(orderList);
 
@@ -75,6 +75,7 @@ public class Main {
                 .flatMap(order -> order.getProducts().stream())
                 .filter(product -> product.getCategory().equals("Toys"))
                 .map(product -> product.getPrice().multiply(BigDecimal.valueOf(0.9)))
+                .distinct()
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         System.out.println(sumOfPrices);
 
@@ -86,6 +87,7 @@ public class Main {
                 .filter(order -> order.getOrderDate().isAfter(LocalDate.of(2021, 2, 1)))
                 .filter(order -> order.getOrderDate().isBefore(LocalDate.of(2021, 4, 1)))
                 .flatMap(order -> order.getProducts().stream())
+                .distinct()
                 .forEach(System.out::println);
 
         //Задание 5
@@ -114,18 +116,22 @@ public class Main {
                 .filter(order -> order.getOrderDate().isEqual(LocalDate.of(2021, 3, 15)))
                 .peek(order -> System.out.println(order.getId()))
                 .flatMap(order -> order.getProducts().stream())
+                .distinct()
                 .toList();
         System.out.println(productList1);
 
         //Задание 8
         System.out.println("Задание 8: ");
-        int orderSum =  customers.stream()
+        BigDecimal orderSum = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
-                .filter(order -> order.getOrderDate().isAfter(LocalDate.of(2021, 2,1)))
-                .filter(order -> order.getOrderDate().isBefore(LocalDate.of(2021, 2, 28)))
+                .filter(order -> {
+                    LocalDate date = order.getOrderDate();
+                    return !date.isBefore(LocalDate.of(2021, 2, 1)) &&
+                            !date.isAfter(LocalDate.of(2021, 2, 28));
+                })
                 .flatMap(order -> order.getProducts().stream())
-                .flatMapToInt(product -> IntStream.of(product.getPrice().intValue()))
-                .sum();
+                .map(Product::getPrice)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         System.out.println(orderSum);
 
         //Задание 9
@@ -158,6 +164,7 @@ public class Main {
         System.out.println("Задание 11: ");
         Map<Long, Integer> productsAmount = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
+                .distinct()
                 .collect(Collectors.toMap(
                         Order::getId,
                         order -> order.getProducts().size(),
@@ -178,6 +185,7 @@ public class Main {
         System.out.println("Задание 13: ");
         Map<Order, Double> sumOfOrderProducts = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
+                .distinct()
                 .collect(Collectors.toMap(
                         order -> order,
                         order -> order.getProducts().stream()
@@ -190,6 +198,7 @@ public class Main {
         Map<String, List<String>> productsByCategories = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
                 .flatMap(order -> order.getProducts().stream())
+                .distinct()
                 .collect(Collectors.groupingBy(
                         Product::getCategory,
                         Collectors.mapping(Product::getName, Collectors.toList())
@@ -201,6 +210,7 @@ public class Main {
         Map<String, Product> mostExpensiveProductByCategories = customers.stream()
                 .flatMap(customer -> customer.getOrders().stream())
                 .flatMap(order -> order.getProducts().stream())
+                .distinct()
                 .collect(Collectors.toMap(
                         Product::getCategory,
                         product -> product,
